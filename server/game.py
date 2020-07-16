@@ -1,19 +1,18 @@
-from server import app
-from flask import session
+from flask import Blueprint
 from server.serverMethods import *
 
-approvedPlayers = set
+game = Blueprint("game", __name__)
 
-
-@app.route("/game/")
-def setUp():
-    print(session)
+approvedPlayers = set()
+@game.route("/game")
+def beginGame():
     checkSession()
-    approvedPlayers.update(session['userID'])
-    print(approvedPlayers)
     print(session)
-    return "lol"
-
-
-if __name__ == '__main__':
-    app.run()
+    if session['userID'] not in approvedPlayers and len(approvedPlayers) < 2:
+        approvedPlayers.add(session['userID'])
+    print(session)
+    print(approvedPlayers)
+    if len(approvedPlayers) < 2:
+        return "waiting for player"
+    else:
+        return "ready"
