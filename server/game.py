@@ -1,10 +1,12 @@
-from flask import Blueprint
+from flask import Blueprint, request
 from server.serverMethods import *
 
 game = Blueprint("game", __name__)
 
 approvedPlayers = set()
-@game.route("/game")
+
+
+@game.route("/game", methods=["GET", "POST"])
 def beginGame():
     checkSession()
     print(session)
