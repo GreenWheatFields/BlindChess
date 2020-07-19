@@ -4,7 +4,6 @@ from flask import request
 
 app.register_blueprint(game)
 
-
 @app.route("/")
 def homePage():
     print("homepage")

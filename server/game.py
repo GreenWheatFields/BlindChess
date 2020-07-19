@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from server.serverMethods import *
 import chess
 import random
@@ -15,10 +15,11 @@ def createGame():
     def gameReady():
         setupReady = True
         return "ready"
-    approvedUser = lambda : session['userID'] in approvedPlayers
+
+    checkSession()
+    approvedUser = session['userID'] in approvedPlayers
     global setupReady
     lobbySize = len(approvedPlayers)
-    checkSession()
 
     if not setupReady and lobbySize < 2:
         print("here")
@@ -34,10 +35,13 @@ def createGame():
     if approvedUser:
         return "ready"
     elif not approvedUser:
-        #todo. 404 error
-        return "unauthorized"
+        abort(404, "lobby full")
 
 
 def setupGame():
     board = chess.Board()
 
+
+# @game.errorhandler(404)
+# def lobbyFullError():
+#     return "lobby full", 404
