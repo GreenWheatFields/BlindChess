@@ -1,7 +1,7 @@
 import random
 
 import chess
-from flask import Blueprint, abort, request
+from flask import Blueprint, abort, request, jsonify
 
 from server.serverMethods import *
 
@@ -11,20 +11,29 @@ approvedPlayers = {}
 approvedUser = None
 setupReady = False
 board = None
+turn = None
 
 
-# maybe seperate method calls in a switch statement and call them from some type of master method depending on the header
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
-    global setupReady, approvedUser
-    print(request.args.get("move"))
+    global setupReady, approvedUser, approvedPlayers
+    # parseArguments()
+    print(request.method)
+    print(approvedUser)
     if not setupReady:
         return createGame()
     elif not approvedUser:
         abort(404, "lobby full")
     else:
-        #todo. method to parse arguments
-        return playChess("",None)
+        # return playChess(parseArguments())
+        return "placeholder"
+
+
+# def parseArguments():
+#     args = request.args
+#     # print(args)
+#     if "move" in args:
+#         return args.get("move")
 
 
 def createGame():
@@ -32,10 +41,9 @@ def createGame():
         global setupReady
         setupReady = True
         # TODO: let users pick colors
-        setupGame()
-        return "ready"
+        return setupGame()
 
-    global setupReady, approvedUser
+    global setupReady, approvedUser, approvedPlayers
     checkSession()
     approvedUser = session['userID'] in approvedPlayers
     lobbySize = len(approvedPlayers)
@@ -52,11 +60,16 @@ def createGame():
 
 
 def setupGame():
-    global board
+    global board, turn
     board = chess.Board()
     approvedPlayers[list(approvedPlayers.keys())[0]] = chess.BLACK if random.randrange(2) + 1 == 2 else chess.WHITE
     approvedPlayers[list(approvedPlayers.keys())[1]] = not approvedPlayers[list(approvedPlayers.keys())[0]]
+    turn = False if random.randrange(2) + 1 == 1 else True
+    # return jsonify(turn=turn)
+    return "placeholder"
 
 
-def playChess(move: str, board: chess.Board()):
+def playChess(move: str):
+    print(move)
+    global board
     pass
