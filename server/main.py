@@ -12,5 +12,4 @@ def homePage():
 
 
 if __name__ == '__main__':
-    print("http://127.0.0.1:5000/game")
     app.run()
