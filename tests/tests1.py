@@ -13,7 +13,7 @@ class TestGeneral(unittest.TestCase):
         self.player1.get("game/")
         self.player2.get("game/")
 
-    # @unittest.skip
+    @unittest.skip
     def test_lobbyFullError(self):
         self.init2PlayerGame()
         self.assertEqual(self.client.get("game/").status_code, 404)
@@ -24,17 +24,14 @@ class TestGeneral(unittest.TestCase):
             print(i)
             print(app.test_client().get("game/"))
 
-    @unittest.skip
+    # @unittest.skip
     def test_simpleChessMove(self):
-        print("---")
-        self.init2PlayerGame()
-        self.assertEqual(self.player1.post("game/?move=e4e5").status_code, 200)
-        self.assertEqual(self.player2.post("game/?move=e4e5").status_code, 200)
-        print("---")
+        with app.test_client() as player1, app.test_client() as player2:
+            player1.get("game/")
+            player2.get("game/")
+            print(player1.post("game/?move=move").status_code)
+            print(player2.post("/game/?move=move").status_code)
 
-    @unittest.skip
-    def test_simpleChessGame(self):
-        self.init2PlayerGame()
 
 
 if __name__ == '__main__':
