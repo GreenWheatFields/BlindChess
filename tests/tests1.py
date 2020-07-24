@@ -24,13 +24,6 @@ class TestGeneral(unittest.TestCase):
             print(i)
             print(app.test_client().get("game/"))
 
-    # @unittest.skip
-    def test_simpleChessMove(self):
-        with app.test_client() as player1, app.test_client() as player2:
-            player1.get("game/")
-            player2.get("game/")
-            print(player1.post("game/?move=move").status_code)
-            print(player2.post("/game/?move=move").status_code)
 
 
 

@@ -1,9 +1,7 @@
 import random
-
+import uuid
 import chess
-from flask import Blueprint, abort, request, jsonify
-
-from server.serverMethods import *
+from flask import Blueprint, abort, request, jsonify, session
 
 game = Blueprint("game", __name__)
 
@@ -12,6 +10,7 @@ approvedUser = None
 setupReady = False
 board = chess.Board()
 turn = None
+gameAlive = False
 
 
 @game.route("/game/", methods=["GET", "POST"])
@@ -47,9 +46,13 @@ def createGame():
     if not setupReady and lobbySize < 2:
         if not approvedUser:
             approvedPlayers[session['userID']] = None
-            return "waiting" if len(approvedPlayers) < 2 else gameReady()
+            temp = {'userID': session['userID'],
+                    "waiting": True}
+            return jsonify(temp) if len(approvedPlayers) < 2 else gameReady()
         elif approvedUser:
-            return "waiting"
+            temp = {'userID': session['userID'],
+                    "waiting": True}
+            return jsonify(temp)
         else:
             gameReady()
     if approvedUser:
@@ -61,19 +64,34 @@ def setupGame():
     approvedPlayers[list(approvedPlayers.keys())[0]] = chess.BLACK if random.randrange(2) + 1 == 2 else chess.WHITE
     approvedPlayers[list(approvedPlayers.keys())[1]] = not approvedPlayers[list(approvedPlayers.keys())[0]]
     turn = chess.WHITE if random.randrange(2) + 1 == 1 else chess.BLACK
-    # return jsonify(turn=turn)
-    return "placeholder"
+    temp = {"userID": session["userID"],
+            "waiting": False,
+            "turn": turn,
+            "yourTurn": approvedPlayers[session["userID"]]}
+    return jsonify(temp)
 
 
 def playChess(move: str):
     global board, turn
-    print(move)
-    x = board.legal_moves
-    y = chess.Move.from_uci("g1h3")
-    print(board.is_legal(y))
-    print(type(x))
-
+    move = chess.Move.from_uci(move)
     if approvedPlayers.get(session["userID"]) != turn:
         abort(404)
+    elif board.is_legal(move):
+        board.push(move)
+        temp = {"gameAlive": True,
+                "turn": turn,
+                "lastMove": move.__str__()}
+        return jsonify(temp)
+    elif move == "resign":
+        # todo, end game here
+        pass
 
     return "placeholder"
+
+
+def checkSession():
+    try:
+        if session['userID'] is None:
+            session['userID'] = uuid.uuid4().__str__()
+    except KeyError:
+        session['userID'] = uuid.uuid4().__str__()

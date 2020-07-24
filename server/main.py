@@ -1,14 +1,18 @@
 from server import app
 from server.game import game
-from flask import request
+from flask import request, jsonify
 
 app.register_blueprint(game)
 
-@app.route("/")
-def homePage():
-    print("homepage")
-    print(request.headers)
-    return "homepage"
+
+# @app.route("/")
+# def homePage():
+#     print("homepage")
+#     print(request.headers)
+#     return "homepage"
+#
+
+
 
 
 if __name__ == '__main__':
