@@ -74,10 +74,11 @@ def setupGame():
 def playChess(move: str):
     global board, turn
     move = chess.Move.from_uci(move)
-    if approvedPlayers.get(session["userID"]) != turn:
+    if approvedPlayers.get(session["userID"]) is not turn:
         abort(404)
     elif board.is_legal(move):
         board.push(move)
+        turn = not turn
         temp = {"gameAlive": True,
                 "turn": turn,
                 "lastMove": move.__str__()}

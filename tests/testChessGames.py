@@ -14,10 +14,17 @@ class MyTestCase(unittest.TestCase):
     def test_simpleChessMove(self):
         with app.test_client() as player1, app.test_client() as player2:
             player1.get("game/")
-            player2.get("game/")
-            print(player1.post("game/?move=move").status_code)
-            print(player2.post("/game/?move=move").status_code)
+            json = player2.get("game/").json
+            # probable could be simplified
+            #todo rename yourTurn varibale
+            if json["turn"] == json["yourTurn"]:
+                self.assertEqual(player2.post("game/?move=e2e3").status_code, 200)
+                self.assertEqual(player1.post("game/?move=e3e4").status_code, 200)
+            else:
+                self.assertEqual(player1.post("game/?move=e2e3").status_code, 200)
+                self.assertEqual(player2.post("game/?move=e3e4").status_code, 200)
 
+    @unittest.skip
     def test_randomChessMoves(self):
         with app.test_client() as player1, app.test_client() as player2:
             player1ID = player1.get("game/").json
