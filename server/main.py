@@ -1,9 +1,9 @@
 from server import app
 from server.game import game
+from server.createApp import create_app
 from flask import request, jsonify
 
-app.register_blueprint(game)
-
+# todo home page:
 
 # @app.route("/")
 # def homePage():
@@ -13,7 +13,7 @@ app.register_blueprint(game)
 #
 
 
-
-
 if __name__ == '__main__':
+    app = create_app()
+    app.register_blueprint(game)
     app.run()

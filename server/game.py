@@ -4,7 +4,7 @@ import chess
 from flask import Blueprint, abort, request, jsonify, session
 
 game = Blueprint("game", __name__)
-
+print("insdide game")
 approvedPlayers = {}
 approvedUser = None
 setupReady = False
