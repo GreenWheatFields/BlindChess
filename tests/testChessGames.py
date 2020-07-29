@@ -30,24 +30,28 @@ class testChessGames(unittest.TestCase):
         with self.app.test_client() as client:
             return client
 
+    def postMoveBasedOffTurn(self, move):
+        if self.player2First:
+            response = self.player2.post("game/?move={}".format(move))
+        else:
+            response = self.player1.post("game/?move={}".format(move))
+        self.player2First = not self.player2First
+        return response
+
     # @unittest.skip
     def test_simpleChessMove(self):
         self.initGame()
         if self.response is None:
             self.fail("null json response")
-        if self.player2First:
-            self.assertEqual(self.player2.post("game/?move=e2e3").status_code, 200)
-            self.assertEqual(self.player1.post("game/?move=e3e4").status_code, 200)
-        else:
-            self.assertEqual(self.player1.post("game/?move=e2e3").status_code, 200)
-            self.assertEqual(self.player2.post("game/?move=e3e4").status_code, 200)
+        self.assertEqual(self.postMoveBasedOffTurn("e2e3").status_code, 200)
+        self.assertEqual(self.postMoveBasedOffTurn("e3e5").status_code, 200)
 
     @unittest.skip
     def test_randomChessMoves(self):
         self.initGame()
         self.board.turn = self.response["turn"]
         gameAlive = self.response["gameAlive"]
-        if not gameAlive or None:
+        if not gameAlive or gameAlive is None:
             self.fail("gameAlive false. game never started")
         while gameAlive:
             if self.player2First:

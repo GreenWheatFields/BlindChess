@@ -15,6 +15,7 @@ gameAlive = False
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
     global setupReady, approvedUser, approvedPlayers, gameAlive
+    print("here")
     # parseArguments()
     checkSession()
     approvedUser = session['userID'] in approvedPlayers
