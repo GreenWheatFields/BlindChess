@@ -4,7 +4,6 @@ import chess
 from flask import Blueprint, abort, request, jsonify, session
 
 game = Blueprint("game", __name__)
-print("insdide game")
 approvedPlayers = {}
 approvedUser = None
 setupReady = False
@@ -15,7 +14,7 @@ gameAlive = False
 
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
-    global setupReady, approvedUser, approvedPlayers
+    global setupReady, approvedUser, approvedPlayers, gameAlive
     # parseArguments()
     checkSession()
     approvedUser = session['userID'] in approvedPlayers
@@ -24,6 +23,8 @@ def handleRequest():
     elif not approvedUser:
         abort(404, "lobby full")
     else:
+        if request.method == "GET":
+            return jsonify({"gameAlive": gameAlive, "turn": turn, "yourTurn": approvedPlayers[session["userID"]]})
         return playChess(request.args.get("move"))
 
 
@@ -60,10 +61,11 @@ def createGame():
 
 
 def setupGame():
-    global turn
+    global turn, gameAlive
     approvedPlayers[list(approvedPlayers.keys())[0]] = chess.BLACK if random.randrange(2) + 1 == 2 else chess.WHITE
     approvedPlayers[list(approvedPlayers.keys())[1]] = not approvedPlayers[list(approvedPlayers.keys())[0]]
     turn = chess.WHITE if random.randrange(2) + 1 == 1 else chess.BLACK
+    gameAlive = True
     temp = {"userID": session["userID"],
             "waiting": False,
             "turn": turn,
@@ -72,14 +74,16 @@ def setupGame():
 
 
 def playChess(move: str):
-    global board, turn
+    global board, turn, gameAlive
     move = chess.Move.from_uci(move)
     if approvedPlayers.get(session["userID"]) is not turn:
         abort(404)
     elif board.is_legal(move):
         board.push(move)
         turn = not turn
-        temp = {"gameAlive": True,
+        if board.is_game_over():
+            gameAlive = False
+        temp = {"gameAlive": gameAlive,
                 "turn": turn,
                 "lastMove": move.__str__()}
         return jsonify(temp)

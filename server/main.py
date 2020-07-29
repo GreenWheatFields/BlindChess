@@ -1,4 +1,3 @@
-from server import app
 from server.game import game
 from server.createApp import create_app
 from flask import request, jsonify
