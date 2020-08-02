@@ -30,7 +30,7 @@ class testChessGames(unittest.TestCase):
         with self.app.test_client() as client:
             return client
 
-    def postMoveBasedOffTurn(self, move):
+    def postMove(self, move):
         if self.player2First:
             response = self.player2.post("game/?move={}".format(move))
         else:
@@ -38,41 +38,38 @@ class testChessGames(unittest.TestCase):
         self.player2First = not self.player2First
         return response
 
-    # @unittest.skip
+    def queryGame(self, json=False):
+        return self.player1.get("game/") if not json else self.player1.get("game/").json
+
+    @unittest.skip
     def test_simpleChessMove(self):
         self.initGame()
         if self.response is None:
             self.fail("null json response")
-        self.assertEqual(self.postMoveBasedOffTurn("e2e3").status_code, 200)
-        self.assertEqual(self.postMoveBasedOffTurn("e3e5").status_code, 200)
+        self.assertEqual(self.postMove("e2e3").status_code, 200)
+        self.assertEqual(self.postMove("e7e6").status_code, 200)
 
-    @unittest.skip
+    # @unittest.skip
     def test_randomChessMoves(self):
         self.initGame()
         self.board.turn = self.response["turn"]
         gameAlive = self.response["gameAlive"]
         if not gameAlive or gameAlive is None:
-            self.fail("gameAlive false. game never started")
+            self.fail("gameAlive false or None. game never started")
         while gameAlive:
-            if self.player2First:
-                move = self.randomMove()
-                self.player2.post("game/?move={}".format(move))
-                self.player2First = not self.player2First
-                self.board.push(move)
-            else:
-                move = self.randomMove()
-                self.player1.post("game/?move={}".format(move))
-                self.player2First = not self.player2First
-                self.board.push(move)
-            gameAlive = self.player1.get("game/").json["gameAlive"]
+            move = self.randomMove()
+            self.board.push(move)
+            self.postMove(move)
+            gameAlive = self.queryGame(json=True)
+            print(self.board)
+
 
     @unittest.skip
     def test_queryIsGameOver(self):
-        # todo replicate on server
+        self.initGame()
         for move in foolsMate:
-            move = chess.Move.from_uci(move)
-            self.board.push(move)
-        print(self.board.is_game_over())
+            self.postMove(move)
+        self.assertFalse(self.player1.get("game/").json["gameAlive"])
 
 
 if __name__ == '__main__':

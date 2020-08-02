@@ -15,7 +15,6 @@ gameAlive = False
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
     global setupReady, approvedUser, approvedPlayers, gameAlive
-    print("here")
     # parseArguments()
     checkSession()
     approvedUser = session['userID'] in approvedPlayers
@@ -82,7 +81,7 @@ def playChess(move: str):
     elif board.is_legal(move):
         board.push(move)
         turn = not turn
-        if board.is_game_over():
+        if board.is_game_over(claim_draw=True):
             gameAlive = False
         temp = {"gameAlive": gameAlive,
                 "turn": turn,
@@ -91,6 +90,8 @@ def playChess(move: str):
     elif move == "resign":
         # todo, end game here
         pass
+    else:
+        return abort(404)
 
     return "placeholder"
 
