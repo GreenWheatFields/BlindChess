@@ -59,10 +59,10 @@ def createGame():
 
 
 def setupGame():
-    global boardTurn, gameAlive
+    global boardTurn, gameAlive, board
     approvedPlayers[list(approvedPlayers.keys())[0]] = chess.BLACK if random.randrange(2) + 1 == 2 else chess.WHITE
     approvedPlayers[list(approvedPlayers.keys())[1]] = not approvedPlayers[list(approvedPlayers.keys())[0]]
-    boardTurn = chess.WHITE if random.randrange(2) + 1 == 1 else chess.BLACK
+    boardTurn = chess.WHITE
     gameAlive = True
     return jsonify(gameStatus())
 
@@ -71,12 +71,15 @@ def playChess(move: str):
     # todo, move used as parameter and global variable
     global board, boardTurn, gameAlive
     move = chess.Move.from_uci(move)
+    print(board.turn, boardTurn, "server response")
     if approvedPlayers.get(session["userID"]) is not boardTurn:
         print("wrong turn")
         abort(404)
     elif board.is_legal(move):
         board.push(move)
+        #todo, simplify boardTurn and board.turn into one variable
         boardTurn = not boardTurn
+        # board.turn = boardTurn
         if board.is_game_over(claim_draw=True):
             gameAlive = False
         return jsonify(gameStatus())

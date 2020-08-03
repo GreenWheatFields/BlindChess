@@ -5,7 +5,6 @@ from server.createApp import create_app
 
 foolsMate = ["f2f3", "e7e5", "g2g4", "d8h4"]
 
-
 class testChessGames(unittest.TestCase):
 
     def setUp(self):
@@ -15,18 +14,19 @@ class testChessGames(unittest.TestCase):
         self.player2 = self.generateClient()
         self.response = None
         self.initGame()
-        self.player2First = self.response["boardTurn"] == self.response["yourTurn"]
 
     def initGame(self):
         self.player1.get("game/")
         self.response = self.player2.get("game/").json
-        print(self.response)
         if self.response is None:
             self.fail("inital response was null")
+        self.player2First = self.response["boardTurn"] == self.response["yourTurn"]
 
-    def randomMove(self):
-        return random.choice(list(self.board.generate_legal_moves()))
-
+    def randomMove(self, localGame=True):
+        move = random.choice(list(self.board.generate_legal_moves()))
+        if localGame:
+            self.board.push(move)
+        return move
     def generateClient(self):
         with self.app.test_client() as client:
             return client
@@ -45,29 +45,26 @@ class testChessGames(unittest.TestCase):
         else:
             return self.player1.get("game/").json
 
-    @unittest.skip
+    # @unittest.skip
     def test_simpleChessMove(self):
         self.initGame()
         if self.response is None:
             self.fail("null json response")
-        self.assertEqual(self.postMove("e2e3").status_code, 200)
-        self.assertEqual(self.postMove("e7e6").status_code, 200)
+
+        self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
+        self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
 
     # @unittest.skip
     def test_randomChessMoves(self):
-        #todo, randome move generation making illegal moves
         self.initGame()
         self.board.turn = self.response["boardTurn"]
         gameAlive = self.response["gameAlive"]
         if not gameAlive or gameAlive is None:
             self.fail("gameAlive false or None. game never started")
         while self.queryGame(json=True)["gameAlive"]:
-            move = self.randomMove()
-            self.board.push(move)
-            self.assertEqual(self.postMove(move).status_code, 200)
+            self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
 
-
-    @unittest.skip
+    # @unittest.skip
     def test_queryIsGameOver(self):
         self.initGame()
         for move in foolsMate:
