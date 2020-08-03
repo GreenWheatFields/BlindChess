@@ -8,8 +8,9 @@ approvedPlayers = {}
 approvedUser = None
 setupReady = False
 board = chess.Board()
-turn = None
+boardTurn = None
 gameAlive = False
+move = None
 
 
 @game.route("/game/", methods=["GET", "POST"])
@@ -24,7 +25,7 @@ def handleRequest():
         abort(404, "lobby full")
     else:
         if request.method == "GET":
-            return jsonify({"gameAlive": gameAlive, "turn": turn, "yourTurn": approvedPlayers[session["userID"]]})
+            return jsonify({"gameAlive": gameAlive, "boardTurn": boardTurn, "yourTurn": approvedPlayers[session["userID"]]})
         return playChess(request.args.get("move"))
 
 
@@ -47,50 +48,43 @@ def createGame():
     if not setupReady and lobbySize < 2:
         if not approvedUser:
             approvedPlayers[session['userID']] = None
-            temp = {'userID': session['userID'],
-                    "waiting": True}
-            return jsonify(temp) if len(approvedPlayers) < 2 else gameReady()
+            return jsonify(gameStatus()) if len(approvedPlayers) < 2 else gameReady()
         elif approvedUser:
-            temp = {'userID': session['userID'],
-                    "waiting": True}
-            return jsonify(temp)
+            return jsonify(gameStatus())
         else:
+            # may be uneccesary
             gameReady()
     if approvedUser:
-        return "ready"
+        return jsonify(gameStatus())
 
 
 def setupGame():
-    global turn, gameAlive
+    global boardTurn, gameAlive
     approvedPlayers[list(approvedPlayers.keys())[0]] = chess.BLACK if random.randrange(2) + 1 == 2 else chess.WHITE
     approvedPlayers[list(approvedPlayers.keys())[1]] = not approvedPlayers[list(approvedPlayers.keys())[0]]
-    turn = chess.WHITE if random.randrange(2) + 1 == 1 else chess.BLACK
+    boardTurn = chess.WHITE if random.randrange(2) + 1 == 1 else chess.BLACK
     gameAlive = True
-    temp = {"userID": session["userID"],
-            "waiting": False,
-            "turn": turn,
-            "yourTurn": approvedPlayers[session["userID"]]}
-    return jsonify(temp)
+    return jsonify(gameStatus())
 
 
 def playChess(move: str):
-    global board, turn, gameAlive
+    # todo, move used as parameter and global variable
+    global board, boardTurn, gameAlive
     move = chess.Move.from_uci(move)
-    if approvedPlayers.get(session["userID"]) is not turn:
+    if approvedPlayers.get(session["userID"]) is not boardTurn:
+        print("wrong turn")
         abort(404)
     elif board.is_legal(move):
         board.push(move)
-        turn = not turn
+        boardTurn = not boardTurn
         if board.is_game_over(claim_draw=True):
             gameAlive = False
-        temp = {"gameAlive": gameAlive,
-                "turn": turn,
-                "lastMove": move.__str__()}
-        return jsonify(temp)
+        return jsonify(gameStatus())
     elif move == "resign":
         # todo, end game here
         pass
     else:
+        print("bad move")
         return abort(404)
 
     return "placeholder"
@@ -102,3 +96,25 @@ def checkSession():
             session['userID'] = uuid.uuid4().__str__()
     except KeyError:
         session['userID'] = uuid.uuid4().__str__()
+
+
+def gameStatus():
+    global gameAlive, boardTurn, setupReady, move, approvedUser
+    # todo, approvedUser always false
+    temp = {"gameAlive": gameAlive,
+            "boardTurn": boardTurn,
+            }
+    if setupReady:
+        if request.method == "POST":
+            temp["lastMove"] = move.__str__()
+
+    elif not setupReady:
+        temp["waiting"] = False
+        temp["userID"] = session['userID']
+    if isApproved():
+        temp["yourTurn"] = approvedPlayers[session['userID']]
+    return temp
+
+
+def isApproved():
+    return session['userID'] in approvedPlayers

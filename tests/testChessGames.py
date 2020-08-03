@@ -15,11 +15,12 @@ class testChessGames(unittest.TestCase):
         self.player2 = self.generateClient()
         self.response = None
         self.initGame()
-        self.player2First = self.response["turn"] == self.response["yourTurn"]
+        self.player2First = self.response["boardTurn"] == self.response["yourTurn"]
 
     def initGame(self):
         self.player1.get("game/")
         self.response = self.player2.get("game/").json
+        print(self.response)
         if self.response is None:
             self.fail("inital response was null")
 
@@ -39,7 +40,10 @@ class testChessGames(unittest.TestCase):
         return response
 
     def queryGame(self, json=False):
-        return self.player1.get("game/") if not json else self.player1.get("game/").json
+        if not json:
+            return self.player1.get("game/")
+        else:
+            return self.player1.get("game/").json
 
     @unittest.skip
     def test_simpleChessMove(self):
@@ -51,17 +55,16 @@ class testChessGames(unittest.TestCase):
 
     # @unittest.skip
     def test_randomChessMoves(self):
+        #todo, randome move generation making illegal moves
         self.initGame()
-        self.board.turn = self.response["turn"]
+        self.board.turn = self.response["boardTurn"]
         gameAlive = self.response["gameAlive"]
         if not gameAlive or gameAlive is None:
             self.fail("gameAlive false or None. game never started")
-        while gameAlive:
+        while self.queryGame(json=True)["gameAlive"]:
             move = self.randomMove()
             self.board.push(move)
-            self.postMove(move)
-            gameAlive = self.queryGame(json=True)
-            print(self.board)
+            self.assertEqual(self.postMove(move).status_code, 200)
 
 
     @unittest.skip
