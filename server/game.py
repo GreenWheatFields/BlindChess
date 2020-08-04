@@ -10,66 +10,43 @@ setupReady = False
 board = chess.Board()
 boardTurn = None
 gameAlive = False
-move = None
+lastMove = ""
 
 
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
-    global setupReady, approvedUser, approvedPlayers, gameAlive
+    global setupReady, approvedPlayers, gameAlive
     checkSession()
-    approvedUser = session['userID'] in approvedPlayers
     if not setupReady:
         return createGame()
-    elif not approvedUser:
+    elif not isApproved():
         abort(404, "lobby full")
     else:
         if request.method == "GET":
-            return jsonify({"gameAlive": gameAlive, "boardTurn": boardTurn, "yourTurn": approvedPlayers[session["userID"]]})
-        elif request.method == "POST":
-            parseArguments()
-            return playChess(request.args.get("move"))
-
-
-def parseArguments():
-    # moves shouldbe validated client side
-    args = request.args
-    if "move" in args:
-        move = request.args.get("move")
-        if move == "resign":
-            endGame()
             return gameStatus()
-        else:
-            return move
-
-    else:
-        # todo, post but no move
-        pass
+        elif request.method == "POST":
+            return playChess(parseArguments())
 
 
 def createGame():
-    def gameReady():
-        global setupReady
-        setupReady = True
-        # TODO: let users pick colors
-        return setupGame()
-
     global setupReady, approvedUser, approvedPlayers
     lobbySize = len(approvedPlayers)
     if not setupReady and lobbySize < 2:
         if not approvedUser:
             approvedPlayers[session['userID']] = None
-            return gameStatus() if len(approvedPlayers) < 2 else gameReady()
+            return gameStatus() if len(approvedPlayers) < 2 else setupGame()
         elif approvedUser:
             return gameStatus()
         else:
-            # may be uneccesary
-            gameReady()
+            # may be uneccesary / unreachable
+            setupGame()
     if approvedUser:
         return gameStatus()
 
 
 def setupGame():
-    global boardTurn, gameAlive, board
+    global boardTurn, gameAlive, board, setupReady
+    setupReady = True
     approvedPlayers[list(approvedPlayers.keys())[0]] = chess.BLACK if random.randrange(2) + 1 == 2 else chess.WHITE
     approvedPlayers[list(approvedPlayers.keys())[1]] = not approvedPlayers[list(approvedPlayers.keys())[0]]
     boardTurn = chess.WHITE
@@ -78,26 +55,31 @@ def setupGame():
 
 
 def playChess(move: str):
-    # todo, move used as parameter and global variable
-    global board, boardTurn, gameAlive
+    global board, boardTurn, gameAlive, lastMove
+    if move == "resign":
+        endGame()
+        return gameStatus()
     move = chess.Move.from_uci(move)
     if approvedPlayers.get(session["userID"]) is not board.turn:
         print("wrong turn")
         abort(404)
     elif board.is_legal(move):
         board.push(move)
+        lastMove = move.__str__()
         boardTurn = not boardTurn
         if board.is_game_over(claim_draw=True):
             endGame()
-        return gameStatus()
-    elif move == "resign":
-        gameAlive = False
         return gameStatus()
     else:
         print("bad move")
         return abort(404)
 
     return "placeholder"
+
+
+def endGame():
+    global board, gameAlive
+    gameAlive = False
 
 
 def checkSession():
@@ -109,14 +91,14 @@ def checkSession():
 
 
 def gameStatus():
-    global gameAlive, boardTurn, setupReady, move, approvedUser
+    global gameAlive, boardTurn, setupReady, lastMove, approvedUser
     # todo, approvedUser always false
     temp = {"gameAlive": gameAlive,
             "boardTurn": boardTurn,
             }
     if setupReady:
         if request.method == "POST":
-            temp["lastMove"] = move.__str__()
+            temp["lastMove"] = lastMove.__str__()
 
     elif not setupReady:
         temp["waiting"] = False
@@ -130,6 +112,11 @@ def isApproved():
     return session['userID'] in approvedPlayers
 
 
-def endGame():
-    global board, gameAlive
-    gameAlive = False
+def parseArguments():
+    # moves shouldbe validated client side
+    if "move" in request.args:
+        if request.args.get("move") is not None:
+            return request.args.get("move")
+        else:
+            # todo, posted empty move will cause error as this fucntion has to return a string
+            pass

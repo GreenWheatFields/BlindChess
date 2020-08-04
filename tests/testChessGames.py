@@ -5,6 +5,7 @@ from server.createApp import create_app
 
 foolsMate = ["f2f3", "e7e5", "g2g4", "d8h4"]
 
+
 class testChessGames(unittest.TestCase):
 
     def setUp(self):
@@ -27,6 +28,7 @@ class testChessGames(unittest.TestCase):
         if localGame:
             self.board.push(move)
         return move
+
     def generateClient(self):
         with self.app.test_client() as client:
             return client
@@ -77,7 +79,6 @@ class testChessGames(unittest.TestCase):
         self.postMove(self.randomMove())
         response = self.postMove("resign")
         self.assertEqual(response.status_code, 200)
-
 
 
 if __name__ == '__main__':
