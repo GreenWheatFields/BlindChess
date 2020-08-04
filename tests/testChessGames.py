@@ -80,6 +80,10 @@ class testChessGames(unittest.TestCase):
         response = self.postMove("resign")
         self.assertEqual(response.status_code, 200)
 
+    def test_headers(self):
+        self.initGame()
+        self.player1.get("game/", headers={"HOLDME": True})
+
 
 if __name__ == '__main__':
     unittest.main()

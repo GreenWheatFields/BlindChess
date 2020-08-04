@@ -16,6 +16,9 @@ lastMove = ""
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
     global setupReady, approvedPlayers, gameAlive
+    #todo, hold requests
+    if "HOLDME" in request.headers:
+        print(request.headers["HOLDME"])
     checkSession()
     if not setupReady:
         return createGame()
@@ -37,9 +40,6 @@ def createGame():
             return gameStatus() if len(approvedPlayers) < 2 else setupGame()
         elif approvedUser:
             return gameStatus()
-        else:
-            # may be uneccesary / unreachable
-            setupGame()
     if approvedUser:
         return gameStatus()
 
@@ -73,8 +73,6 @@ def playChess(move: str):
     else:
         print("bad move")
         return abort(404)
-
-    return "placeholder"
 
 
 def endGame():
