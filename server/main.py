@@ -1,4 +1,5 @@
 from server.game import game
+from server.holdRequest import HoldRequest
 from server.createApp import create_app
 from flask import request, jsonify
 
@@ -15,4 +16,5 @@ from flask import request, jsonify
 if __name__ == '__main__':
     app = create_app()
     app.register_blueprint(game)
+    app.register_blueprint(HoldRequest)
     app.run()

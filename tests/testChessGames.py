@@ -9,6 +9,8 @@ foolsMate = ["f2f3", "e7e5", "g2g4", "d8h4"]
 class testChessGames(unittest.TestCase):
 
     def setUp(self):
+        if __name__ != "main":
+            unittest.skip("NotMain")
         self.board = chess.Board()
         self.app = create_app()
         self.player1 = self.generateClient()
@@ -47,12 +49,12 @@ class testChessGames(unittest.TestCase):
         else:
             return self.player1.get("game/").json
 
-    # @unittest.skip
+    @unittest.skip
     def test_simpleChessMove(self):
         self.initGame()
+        print("HEREr")
         if self.response is None:
             self.fail("null json response")
-
         self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
         self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
 
@@ -80,10 +82,12 @@ class testChessGames(unittest.TestCase):
         response = self.postMove("resign")
         self.assertEqual(response.status_code, 200)
 
+    @unittest.skip
     def test_headers(self):
         self.initGame()
         self.player1.get("game/", headers={"HOLDME": True})
 
 
 if __name__ == '__main__':
+    print("main")
     unittest.main()
