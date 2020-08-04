@@ -54,7 +54,7 @@ class testChessGames(unittest.TestCase):
         self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
         self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
 
-    # @unittest.skip
+    @unittest.skip
     def test_randomChessMoves(self):
         self.initGame()
         self.board.turn = self.response["boardTurn"]
@@ -64,12 +64,20 @@ class testChessGames(unittest.TestCase):
         while self.queryGame(json=True)["gameAlive"]:
             self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
 
-    # @unittest.skip
+    @unittest.skip
     def test_queryIsGameOver(self):
         self.initGame()
         for move in foolsMate:
             self.postMove(move)
         self.assertFalse(self.player1.get("game/").json["gameAlive"])
+
+    @unittest.skip
+    def test_resign(self):
+        self.initGame()
+        self.postMove(self.randomMove())
+        response = self.postMove("resign")
+        self.assertEqual(response.status_code, 200)
+
 
 
 if __name__ == '__main__':

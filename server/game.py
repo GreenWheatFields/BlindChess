@@ -16,7 +16,6 @@ move = None
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
     global setupReady, approvedUser, approvedPlayers, gameAlive
-    # parseArguments()
     checkSession()
     approvedUser = session['userID'] in approvedPlayers
     if not setupReady:
@@ -26,14 +25,25 @@ def handleRequest():
     else:
         if request.method == "GET":
             return jsonify({"gameAlive": gameAlive, "boardTurn": boardTurn, "yourTurn": approvedPlayers[session["userID"]]})
-        return playChess(request.args.get("move"))
+        elif request.method == "POST":
+            parseArguments()
+            return playChess(request.args.get("move"))
 
 
-# def parseArguments():
-#     args = request.args
-#     # print(args)
-#     if "move" in args:
-#         return args.get("move")
+def parseArguments():
+    # moves shouldbe validated client side
+    args = request.args
+    if "move" in args:
+        move = request.args.get("move")
+        if move == "resign":
+            endGame()
+            return gameStatus()
+        else:
+            return move
+
+    else:
+        # todo, post but no move
+        pass
 
 
 def createGame():
@@ -48,14 +58,14 @@ def createGame():
     if not setupReady and lobbySize < 2:
         if not approvedUser:
             approvedPlayers[session['userID']] = None
-            return jsonify(gameStatus()) if len(approvedPlayers) < 2 else gameReady()
+            return gameStatus() if len(approvedPlayers) < 2 else gameReady()
         elif approvedUser:
-            return jsonify(gameStatus())
+            return gameStatus()
         else:
             # may be uneccesary
             gameReady()
     if approvedUser:
-        return jsonify(gameStatus())
+        return gameStatus()
 
 
 def setupGame():
@@ -64,28 +74,25 @@ def setupGame():
     approvedPlayers[list(approvedPlayers.keys())[1]] = not approvedPlayers[list(approvedPlayers.keys())[0]]
     boardTurn = chess.WHITE
     gameAlive = True
-    return jsonify(gameStatus())
+    return gameStatus()
 
 
 def playChess(move: str):
     # todo, move used as parameter and global variable
     global board, boardTurn, gameAlive
     move = chess.Move.from_uci(move)
-    print(board.turn, boardTurn, "server response")
-    if approvedPlayers.get(session["userID"]) is not boardTurn:
+    if approvedPlayers.get(session["userID"]) is not board.turn:
         print("wrong turn")
         abort(404)
     elif board.is_legal(move):
         board.push(move)
-        #todo, simplify boardTurn and board.turn into one variable
         boardTurn = not boardTurn
-        # board.turn = boardTurn
         if board.is_game_over(claim_draw=True):
-            gameAlive = False
-        return jsonify(gameStatus())
+            endGame()
+        return gameStatus()
     elif move == "resign":
-        # todo, end game here
-        pass
+        gameAlive = False
+        return gameStatus()
     else:
         print("bad move")
         return abort(404)
@@ -116,8 +123,13 @@ def gameStatus():
         temp["userID"] = session['userID']
     if isApproved():
         temp["yourTurn"] = approvedPlayers[session['userID']]
-    return temp
+    return jsonify(temp)
 
 
 def isApproved():
     return session['userID'] in approvedPlayers
+
+
+def endGame():
+    global board, gameAlive
+    gameAlive = False
