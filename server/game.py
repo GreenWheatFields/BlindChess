@@ -12,6 +12,8 @@ boardTurn = None
 gameAlive = False
 lastMove = ""
 
+# todo, dynamically genreate urls with this blueprint
+
 
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
@@ -118,3 +120,7 @@ def parseArguments():
         else:
             # todo, posted empty move will cause error as this fucntion has to return a string
             pass
+    else:
+        # todo, emppty move parameters
+        pass
+

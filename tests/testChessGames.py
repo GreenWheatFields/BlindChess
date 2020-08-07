@@ -52,7 +52,6 @@ class testChessGames(unittest.TestCase):
     @unittest.skip
     def test_simpleChessMove(self):
         self.initGame()
-        print("HEREr")
         if self.response is None:
             self.fail("null json response")
         self.assertEqual(self.postMove(self.randomMove()).status_code, 200)
@@ -89,5 +88,4 @@ class testChessGames(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print("main")
     unittest.main()
