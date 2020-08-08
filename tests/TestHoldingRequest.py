@@ -4,6 +4,7 @@ import time
 import threading
 
 postResponse = {}
+responses = []
 
 
 class testPolling(testChessGames):
@@ -30,12 +31,26 @@ class testPolling(testChessGames):
             except KeyError:
                 self.fail("variables differentiate")
 
+    @unittest.skip
     def test_headers(self):
-        headers = {"2" : "4"}
-        self.get("hold/me/", headers=headers)
+        headers = {"HOLDME": True}
+        get1 = threading.Thread(target=self.get, args=("hold/me", headers))
+        headers = {"ESCAPE": 0}
+        get2 = threading.Thread(target=self.get, args=("hold/me", headers))
+        get1.start()
+        get2.start()
+        get2.join()
+        if get1.is_alive():
+            get1.join(0)
+            self.fail("escape clause not met")
+
+    @unittest.skip
+    def test_reconnect(self):
+        # todo, see if gamestatus is updated when a user doesnt reconnect after a specific timeout
+        pass
 
     def get(self, endpoint, headers=None):
-        #todo, post and get methods should belong to the super class
+        # todo, post and get methods should belong to the super class
         return self.player1.get(endpoint, headers=headers if headers is not None else headers)
 
     def post(self, *endpoint, **other):

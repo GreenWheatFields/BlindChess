@@ -1,7 +1,6 @@
 from server.game import game
-from server.holdRequest import HoldRequest
+from tests.holdRequest import HoldRequest
 from server.createApp import create_app
-from flask import request, jsonify
 
 # todo home page:
 

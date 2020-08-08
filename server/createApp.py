@@ -1,19 +1,20 @@
 from flask import Flask
 from server.game import game
-from server.holdRequest import HoldRequest
+import tests
+from tests.holdRequest import HoldRequest
 import server
 import importlib
 import os
-import sys
 
 
-def create_app():
+def create_app(debug=True):
     app = Flask(__name__)
     if os.getenv("SECRET_KEY") is None:
         raise Exception("NoSecretKey")
     app.secret_key = os.getenv("SECRET_KEY")
     importlib.reload(server.game)
-    importlib.reload(server.holdRequest)
     app.register_blueprint(game)
-    app.register_blueprint(HoldRequest)
+    if debug:
+        importlib.reload(tests.holdRequest)
+        app.register_blueprint(HoldRequest)
     return app
