@@ -12,7 +12,7 @@ class testPolling(testChessGames):
     @unittest.skip
     def test_simpleHold(self):
         endpoint = "hold/"
-        post = threading.Thread(target=self.post, args=(endpoint))
+        post = threading.Thread(target=self.post, args=endpoint)
         post.start()
         response = self.get(endpoint)
         try:
@@ -49,15 +49,7 @@ class testPolling(testChessGames):
         # todo, see if gamestatus is updated when a user doesnt reconnect after a specific timeout
         pass
 
-    def get(self, endpoint, headers=None):
-        # todo, post and get methods should belong to the super class
-        return self.player1.get(endpoint, headers=headers if headers is not None else headers)
 
-    def post(self, *endpoint, **other):
-        endpoint = "".join(endpoint)
-        r = self.player2.post(endpoint).json
-        global postResponse
-        postResponse = r
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import random
 import uuid
 import chess
+import time
 from flask import Blueprint, abort, request, jsonify, session
 
 game = Blueprint("game", __name__)
@@ -11,16 +12,25 @@ board = chess.Board()
 boardTurn = None
 gameAlive = False
 lastMove = ""
+currentHold = None
+
 
 # todo, dynamically genreate urls with this blueprint
 
 
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
-    global setupReady, approvedPlayers, gameAlive
-    #todo, hold requests
+    global setupReady, approvedPlayers, gameAlive, currentHold
     if "HOLDME" in request.headers:
-        print(request.headers["HOLDME"])
+        #todo, this block shouldnt be first
+        if request.headers["HOLDME"]:
+            # and approvedPlayers.get(session["userID"]) is not board.turn
+            currentHold = HoldRequest()
+            currentHold.hold()
+        else:
+            # error
+            pass
+
     checkSession()
     if not setupReady:
         return createGame()
@@ -124,3 +134,18 @@ def parseArguments():
         # todo, emppty move parameters
         pass
 
+
+class HoldRequest:
+    def __init__(self):
+        self.releaseClause = False
+        self.startTime = None
+
+    def hold(self):
+        self.startTime = time.time()
+        while not self.releaseClause and time.time() - self.startTime < 3:
+            print("holding")
+        # todo, find out what condition was met
+
+    def notify(self):
+        self.releaseClause = True
+        return gameStatus()

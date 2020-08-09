@@ -2,6 +2,7 @@ import unittest
 import chess
 import random
 from server.createApp import create_app
+import threading
 
 foolsMate = ["f2f3", "e7e5", "g2g4", "d8h4"]
 
@@ -49,6 +50,16 @@ class testChessGames(unittest.TestCase):
         else:
             return self.player1.get("game/").json
 
+    def get(self, endpoint, headers=None):
+        # todo, post and get methods should belong to the super class
+        return self.player1.get(endpoint, headers=headers if headers is not None else headers)
+
+    def post(self, *endpoint, **other):
+        endpoint = "".join(endpoint)
+        r = self.player2.post(endpoint).json
+        global postResponse
+        postResponse = r
+
     @unittest.skip
     def test_simpleChessMove(self):
         self.initGame()
@@ -81,11 +92,13 @@ class testChessGames(unittest.TestCase):
         response = self.postMove("resign")
         self.assertEqual(response.status_code, 200)
 
-    @unittest.skip
+    # @unittest.skip
     def test_headers(self):
         self.initGame()
-        self.player1.get("game/", headers={"HOLDME": True})
-
+        print(self.player2First)
+        one = threading.Thread(target=self.get, args=("game/", {"HOLDME": True}))
+        one.start()
+        # self.player2.ge
 
 if __name__ == '__main__':
     unittest.main()
