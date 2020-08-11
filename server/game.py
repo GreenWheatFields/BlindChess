@@ -21,17 +21,8 @@ currentHold = None
 @game.route("/game/", methods=["GET", "POST"])
 def handleRequest():
     global setupReady, approvedPlayers, gameAlive, currentHold
-    if "HOLDME" in request.headers:
-        #todo, this block shouldnt be first
-        if request.headers["HOLDME"]:
-            # and approvedPlayers.get(session["userID"]) is not board.turn
-            currentHold = HoldRequest()
-            currentHold.hold()
-        else:
-            # error
-            pass
-
     checkSession()
+    currentHold = HoldRequest()
     if not setupReady:
         return createGame()
     elif not isApproved():
@@ -67,7 +58,7 @@ def setupGame():
 
 
 def playChess(move: str):
-    global board, boardTurn, gameAlive, lastMove
+    global board, boardTurn, gameAlive, lastMove, currentHold
     if move == "resign":
         endGame()
         return gameStatus()
@@ -75,6 +66,7 @@ def playChess(move: str):
     if approvedPlayers.get(session["userID"]) is not board.turn:
         print("wrong turn")
         abort(404)
+
     elif board.is_legal(move):
         board.push(move)
         lastMove = move.__str__()
@@ -133,6 +125,17 @@ def parseArguments():
     else:
         # todo, emppty move parameters
         pass
+
+
+# def validToHold():
+#     if "HOLDME" in request.headers:
+#         if request.headers["HOLDME"]:
+#             return True
+#         else:
+#             # error
+#             pass
+#     else:
+#         return False
 
 
 class HoldRequest:

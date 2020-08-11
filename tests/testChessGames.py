@@ -36,7 +36,7 @@ class testChessGames(unittest.TestCase):
         with self.app.test_client() as client:
             return client
 
-    def postMove(self, move):
+    def postMove(self, move, wrongTurn=False):
         if self.player2First:
             response = self.player2.post("game/?move={}".format(move))
         else:
@@ -95,10 +95,8 @@ class testChessGames(unittest.TestCase):
     # @unittest.skip
     def test_headers(self):
         self.initGame()
-        print(self.player2First)
-        one = threading.Thread(target=self.get, args=("game/", {"HOLDME": True}))
-        one.start()
-        # self.player2.ge
+        if self.player2First:
+            print(self.player1.post("game/?move{}"))
 
 if __name__ == '__main__':
     unittest.main()
